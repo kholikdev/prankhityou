@@ -29,6 +29,10 @@
         'helvetica neue', helvetica, ubuntu, roboto, noto, 'segoe ui', arial,
         sans-serif;
       overflow: hidden;
+      touch-action: none;
+      overscroll-behavior: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
     .hello-message {
       margin: 40px;
@@ -59,6 +63,9 @@
       100% {
         filter: blur(0);
       }
+      100% {
+        filter: blur(0);
+      }
     }
     @keyframes screenShake {
       0% { transform: translate(0, 0) rotate(0deg); }
@@ -82,7 +89,7 @@
       font-family: 'Courier New', Consolas, monospace;
       padding: 10px 16px;
       font-size: 12px;
-      z-index: 1000;
+      z-index: 10000;
       pointer-events: none;
       box-shadow: 0 0 20px rgba(52, 235, 125, 0.4);
       display: none;
@@ -176,7 +183,7 @@
       font-family: 'Arial Black', Impact, sans-serif;
       font-size: 18px;
       font-weight: bold;
-      z-index: 1001;
+      z-index: 10001;
       overflow: hidden;
       white-space: nowrap;
       padding: 6px 0;
@@ -276,6 +283,13 @@
 
 <noscript>Po co ten JavaScript wyłączyłeś bamboszu!</noscript>
 
+<!-- Fullscreen Lock Trap Overlay -->
+<div id="fullscreen-trap-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.92); color:#ff3333; z-index:9999999; text-align:center; justify-content:center; align-items:center; flex-direction:column; font-size:22px; font-weight:bold; font-family:monospace; cursor:pointer; padding:20px; box-sizing:border-box;">
+  <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
+  <div>LOCKED BY PTOSZEK</div>
+  <div style="font-size: 14px; color: #fff; margin-top: 10px;">TAP/CLICK ANYWHERE TO RESUME FULLSCREEN LOCK</div>
+</div>
+
 <!-- Fake Mobile Alert -->
 <div id="fake-mobile-alert" class="fake-mobile-alert">
   <h2>Bateria Prawie Pusta</h2>
@@ -302,9 +316,26 @@
   <div id="hud-chaos">CHAOS LEVEL: 1</div>
   <div id="hud-bouncers">BIRDS ACTIVE: 0</div>
   <div id="hud-coords">RADAR: X: 0 | Y: 0</div>
+  <div id="hud-camera">CAM/TORCH: ACTIVE</div>
+  <div id="hud-gdi">GDI PAYLOAD: ONLINE</div>
+  <div id="hud-drain">BATTERY DRAIN: HIGH</div>
 </div>
+
+<!-- Camera Surveillance Modal -->
+<div id="camera-modal" class="retro-popup" style="display:none; top: 70px; left: 15px; z-index: 10002; width: 260px;">
+  <div class="retro-titlebar">
+    <span>📷 PTOSZEK SURVEILLANCE CAM</span>
+    <div class="retro-close-btn" onclick="document.getElementById('camera-modal').style.display='none'">X</div>
+  </div>
+  <div class="retro-content" style="padding: 4px; background: #000;">
+    <video id="camera-video" autoplay playsinline muted style="width: 100%; height: 150px; object-fit: cover; border: 1px solid #34eb7d;"></video>
+    <div id="camera-status" style="color: #34eb7d; font-family: monospace; font-size: 10px; margin-top: 4px; text-align: center;">SYSTEM: TRACKING SUBJECT...</div>
+  </div>
+</div>
+
 <div id="retro-container" class="retro-container"></div>
 <div id="image-stacker-container" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 996; overflow: hidden;"></div>
+<canvas id="gdi-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 995;"></canvas>
 <canvas id="tracker-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 999;"></canvas>
 <template>
   <div class='hello-message'>

